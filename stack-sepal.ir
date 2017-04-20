@@ -6,7 +6,7 @@
                                  ["[]" "respo-ui.style" ":as" "ui"]
                                  ["[]" "respo.alias" ":refer" ["[]" "create-comp" "div" "span"]]
                                  ["[]" "respo.comp.space" ":refer" ["[]" "comp-space"]]
-                                 ["[]" "respo.comp.text" ":refer" ["[]" "comp-text"]]]],
+                                 ["[]" "respo.comp.text" ":refer" ["[]" "comp-text" "comp-code"]]]],
                            :defs {"comp-container" ["def"
                                                     "comp-container"
                                                     ["create-comp"
@@ -17,7 +17,8 @@
                                                        ["cursor"]
                                                        ["div"
                                                         ["{}" [":style" ["merge" "ui/global" "ui/fullscreen"]]]
-                                                        ["comp-text" "|Hi" "nil"]]]]]]},
+                                                        ["comp-code" ["pr-str" "demo-program"] "nil"]]]]]],
+                                  "demo-program" ["def" "demo-program" ["[]" "|+" "|1" ["[]" "|+" "|2" "|3"]]]},
                            :procs []},
          "main" {:ns ["ns"
                       "client.main"
