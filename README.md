@@ -6,7 +6,7 @@ Vinca: an UI debugger experiment
 
 ### Develop
 
-Workflow https://github.com/mvc-works/stack-workflow
+Workflow https://github.com/mvc-works/coworkflow
 
 ### License
 

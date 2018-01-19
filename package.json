@@ -1,24 +1,31 @@
 {
-  "name": "stack-workflow",
+  "name": "coworkflow",
   "version": "0.1.0",
-  "description": "Stack Workflow",
+  "description": "CoWorkflow",
   "main": "index.js",
   "scripts": {
-    "test": "echo \"Error: no test specified\" && exit 1"
+    "cdn": "rsync -avr --progress dist/* tiye.me:cdn/coworkflow",
+    "tiye": "rsync -avr --progress dist/{index.html,manifest.json} tiye.me:repo/mvc-works/coworkflow/",
+    "upload": "yarn cdn && yarn tiye",
+    "release": "shadow-cljs release browser",
+    "watch": "shadow-cljs watch browser",
+    "compile-ssr": "shadow-cljs compile ssr",
+    "html-dev": "env=dev node target/ssr.js && cp entry/manifest.json target/",
+    "html": "node target/ssr.js && cp entry/manifest.json dist/",
+    "index.html": "yarn compile-ssr && yarn html-dev",
+    "del": "rm -rf dist/*",
+    "serve": "http-server dist -s",
+    "build": "yarn del && yarn release && yarn compile-ssr && yarn html",
+    "build2": "shadow-cljs clj-run build.release/-main"
   },
   "repository": {
     "type": "git",
-    "url": "git@github.com:mvc-works/stack-workflow.git"
+    "url": "git@github.com:mvc-works/coworkflow.git"
   },
   "author": "jiyinyiyong",
   "license": "MIT",
   "devDependencies": {
-    "css-loader": "^0.28.0",
-    "extract-text-webpack-plugin": "^2.0.0-beta.4",
-    "file-loader": "^0.11.0",
-    "respo-ui": "^0.1.2",
-    "style-loader": "^0.16.1",
-    "url-loader": "^0.5.7",
-    "webpack": "^2.3.2"
+    "http-server": "^0.11.1",
+    "shadow-cljs": "^2.0.134"
   }
 }
