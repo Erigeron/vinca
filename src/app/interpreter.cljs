@@ -11,7 +11,7 @@
 (defn interpret [scope expr *io]
   (assert (or (= :expr (:type expr)) (= :leaf (:type expr))) "only accept code")
   (log! expr)
-  (let [base-value {:type :value, :data nil, :scope scope, :expr expr, :io @*io}]
+  (let [base-value {:type :value, :data nil, :scope scope, :io @*io}]
     (merge
      base-value
      (if (= :expr (:type expr))
@@ -19,10 +19,12 @@
          (case (:type method)
            :special-form
              (let [params (map (fn [x] (interpret scope x *io)) (rest (:data expr)))]
-               (case (:data method)
-                 "+" (apply form-add params)
-                 "echo" (doseq [p params] (swap! *io conj p))
-                 (throw (js/Error. (str "Unknown special form: " (:data method))))))
+               (merge
+                {:evaluation {:type :special-form, :data method, :params params}}
+                (case (:data method)
+                  "+" (apply form-add params)
+                  "echo" {:type :value, :data (doseq [p params] (swap! *io conj p))}
+                  (throw (js/Error. (str "Unknown special form: " (:data method)))))))
            :function
              (apply (:data method) (map (fn [x] (interpret scope x *io)) (rest (:data expr))))
            (throw (js/Error. (str "Unknown method: " method)))))
