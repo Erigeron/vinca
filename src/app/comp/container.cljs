@@ -20,7 +20,7 @@
     (textarea
      {:value (:content store),
       :placeholder "Content",
-      :style (merge ui/textarea {:width 640, :height 320, :font-family ui/font-code}),
+      :style (merge ui/textarea {:width 320, :height 640, :font-family ui/font-code}),
       :on-input (action-> :content (:value %e))})
     (=< "8px" nil)
     (div
@@ -28,5 +28,7 @@
      (button
       {:style ui/button,
        :inner-text (str "run"),
-       :on-click (fn [e d! m!] (load-program (read-string (:content store))))}))
+       :on-click (fn [e d! m!]
+         (.clear js/console)
+         (load-program (read-string (:content store))))}))
     (cursor-> :reel comp-reel states reel {}))))

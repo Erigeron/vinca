@@ -6,10 +6,14 @@
             [app.schema :as schema]
             [reel.util :refer [id!]]
             [reel.core :refer [reel-updater refresh-reel listen-devtools!]]
-            [reel.schema :as reel-schema]))
+            [reel.schema :as reel-schema]
+            [cljs.reader :refer [read-string]]))
 
 (defonce *reel
-  (atom (-> reel-schema/reel (assoc :base schema/store) (assoc :store schema/store))))
+  (atom
+   (let [store (let [raw (.getItem js/localStorage "vinca")]
+                 (if (some? raw) (read-string raw) schema/store))]
+     (-> reel-schema/reel (assoc :base store) (assoc :store store)))))
 
 (defn dispatch! [op op-data]
   (let [op-id (id!), next-reel (reel-updater updater @*reel op op-data op-id)]
@@ -27,6 +31,10 @@
   (render-app! render!)
   (add-watch *reel :changes (fn [] (render-app! render!)))
   (listen-devtools! "a" dispatch!)
+  (.addEventListener
+   js/window
+   "beforeunload"
+   (fn [] (.setItem js/localStorage "vinca" (pr-str (:store @*reel)))))
   (println "App started."))
 
 (defn reload! []

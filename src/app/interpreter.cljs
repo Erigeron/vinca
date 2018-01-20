@@ -1,17 +1,18 @@
 
-(ns app.interpreter (:require [cuerdas.core :as str] [verbosely.core :refer [log!]]))
+(ns app.interpreter
+  (:require [cuerdas.core :as str] [verbosely.core :refer [log! verbosely!]]))
 
 (defn form-add [x y]
   (assert (= :number (:type x)) (str "x should be a number" x))
   (assert (= :number (:type y)) (str "y should be a number: " y))
   {:type :number, :data (+ (:data x) (:data y))})
 
-(def special-forms #{"+" "echo"})
+(def special-forms #{"+" "echo" "def" "defn"})
 
 (defn interpret [scope expr *io]
   (assert (or (= :expr (:type expr)) (= :leaf (:type expr))) "only accept code")
   (log! expr)
-  (let [base-value {:type :value, :data nil, :scope scope, :io @*io}]
+  (let [base-value {:type :value, :data nil, :scope scope}]
     (merge
      base-value
      (if (= :expr (:type expr))
@@ -32,7 +33,13 @@
                   (assert (= 2 (count (:data expr))) "echo only handles 1 parameter")
                   {:type :value,
                    :data (swap! *io conj (interpret scope (last (:data expr)) *io))})
-               "def" {:type :value, :data nil, :scope scope}
+               "def"
+                 {:type :value,
+                  :data nil,
+                  :scope (assoc
+                          scope
+                          (:data (nth (:data expr) 1))
+                          (interpret scope (last (:data expr)) *io))}
                "defn"
                  {:type :value,
                   :data nil,
@@ -43,9 +50,9 @@
            (throw (js/Error. (str "Unknown method: " method)))))
        (let [leaf expr, x (:data leaf)]
          (cond
-           (str/numeric? x) {:type :number, :data (str/parse-number x)}
+           (str/numeric? x) {:type :number, :data (str/parse-number x), :expr leaf}
            (contains? special-forms x) {:type :special-form, :data (get special-forms x)}
-           (contains? scope x) {:type :function, (:data (get scope x)) nil}
+           (contains? scope x) (get scope x)
            :else (throw (js/Error. (str "Unknown value: " x)))))))))
 
 (defn markup-expr [tree coord]
@@ -56,11 +63,11 @@
     {:type :leaf, :coord coord, :data tree}))
 
 (defn load-program [tree]
-  (let [initial-ast (map (fn [line] (markup-expr line [])) tree)
+  (let [initial-ast (map-indexed (fn [idx line] (markup-expr line [idx])) tree)
         initial-scope {}
         *io (atom [])]
     (log! initial-ast)
     (loop [scope initial-scope, ast initial-ast]
       (if (empty? ast)
         (println @*io)
-        (recur (:scope (interpret scope (first ast) *io)) (rest ast))))))
+        (recur (:scope (verbosely! interpret scope (first ast) *io)) (rest ast))))))
