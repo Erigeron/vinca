@@ -1,11 +1,11 @@
 {
-  "name": "coworkflow",
+  "name": "vinca",
   "version": "0.1.0",
   "description": "CoWorkflow",
   "main": "index.js",
   "scripts": {
-    "cdn": "rsync -avr --progress dist/* tiye.me:cdn/coworkflow",
-    "tiye": "rsync -avr --progress dist/{index.html,manifest.json} tiye.me:repo/mvc-works/coworkflow/",
+    "cdn": "rsync -avr --progress dist/* tiye.me:cdn/vinca",
+    "tiye": "rsync -avr --progress dist/{index.html,manifest.json} tiye.me:repo/Erigeron/vinca/",
     "upload": "yarn cdn && yarn tiye",
     "release": "shadow-cljs release browser",
     "watch": "shadow-cljs watch browser",
@@ -20,13 +20,13 @@
   },
   "repository": {
     "type": "git",
-    "url": "git@github.com:mvc-works/coworkflow.git"
+    "url": "git@github.com:mvc-works/vinca.git"
   },
   "author": "jiyinyiyong",
   "license": "MIT",
   "devDependencies": {
     "http-server": "^0.11.1",
-    "shadow-cljs": "^2.0.134"
+    "shadow-cljs": "^2.0.137"
   },
   "dependencies": {
     "xregexp": "^4.0.0"
