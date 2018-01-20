@@ -18,13 +18,26 @@
        (let [method (interpret scope (first (:data expr)) *io)]
          (case (:type method)
            :special-form
-             (let [params (map (fn [x] (interpret scope x *io)) (rest (:data expr)))]
-               (merge
-                {:evaluation {:type :special-form, :data method, :params params}}
-                (case (:data method)
-                  "+" (apply form-add params)
-                  "echo" {:type :value, :data (doseq [p params] (swap! *io conj p))}
-                  (throw (js/Error. (str "Unknown special form: " (:data method)))))))
+             (case (:data method)
+               "+"
+                 (let [params (map (fn [x] (interpret scope x *io)) (rest (:data expr)))]
+                   (merge
+                    {:evaluation {:type :special-form,
+                                  :data method,
+                                  :params params,
+                                  :scope scope}}
+                    (apply form-add params)))
+               "echo"
+                 (do
+                  (assert (= 2 (count (:data expr))) "echo only handles 1 parameter")
+                  {:type :value,
+                   :data (swap! *io conj (interpret scope (last (:data expr)) *io))})
+               "def" {:type :value, :data nil, :scope scope}
+               "defn"
+                 {:type :value,
+                  :data nil,
+                  :scope (assoc scope (:data method) ({} (:type :function) (fn [& args] )))}
+               (throw (js/Error. (str "Unknown special form: " (:data method)))))
            :function
              (apply (:data method) (map (fn [x] (interpret scope x *io)) (rest (:data expr))))
            (throw (js/Error. (str "Unknown method: " method)))))
