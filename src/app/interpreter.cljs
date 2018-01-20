@@ -11,7 +11,6 @@
 
 (defn interpret [scope expr *io]
   (assert (or (= :expr (:type expr)) (= :leaf (:type expr))) "only accept code")
-  (log! expr)
   (let [base-value {:type :value, :data nil, :scope scope}]
     (merge
      base-value
@@ -39,11 +38,33 @@
                   :scope (assoc
                           scope
                           (:data (nth (:data expr) 1))
-                          (interpret scope (last (:data expr)) *io))}
+                          (update
+                           (interpret scope (last (:data expr)) *io)
+                           :evaluation
+                           (fn [x]
+                             {:special-form "def",
+                              :variable (nth (:data expr) 1),
+                              :data expr,
+                              :value x})))}
                "defn"
                  {:type :value,
                   :data nil,
-                  :scope (assoc scope (:data method) ({} (:type :function) (fn [& args] )))}
+                  :scope (assoc
+                          scope
+                          (:data (nth (:data expr) 1))
+                          (do
+                           (assert (= :expr (:type (nth (:data expr) 2))))
+                           (log! (:data (nth (:data expr) 2)))
+                           (let [arg-names (->> (:data (nth (:data expr) 2)) (map :data))
+                                 f-body (nth (:data expr) 3)]
+                             (assert
+                              (every? string? arg-names)
+                              "argument name should be string")
+                             {:type :function,
+                              :data (fn [& passed-in-args]
+                                (let [f-scope (merge scope (zipmap arg-names passed-in-args))]
+                                  (interpret f-scope f-body *io))),
+                              :evaluation {:special-form "defn"}})))}
                (throw (js/Error. (str "Unknown special form: " (:data method)))))
            :function
              (apply (:data method) (map (fn [x] (interpret scope x *io)) (rest (:data expr))))
@@ -66,8 +87,7 @@
   (let [initial-ast (map-indexed (fn [idx line] (markup-expr line [idx])) tree)
         initial-scope {}
         *io (atom [])]
-    (log! initial-ast)
     (loop [scope initial-scope, ast initial-ast]
       (if (empty? ast)
         (println @*io)
-        (recur (:scope (verbosely! interpret scope (first ast) *io)) (rest ast))))))
+        (recur (:scope (interpret scope (first ast) *io)) (rest ast))))))
